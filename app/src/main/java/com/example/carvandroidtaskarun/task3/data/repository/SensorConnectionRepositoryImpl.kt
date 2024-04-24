@@ -6,30 +6,28 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class SensorConnectionRepositoryImpl @Inject constructor() : SensorConnectionRepository {
+
     override fun observeConnection(): Flow<Boolean> = flow {
-        var disconnectStartTime: Long? = null
+        var lastDisconnectTime: Long? = null
+        var isConnected = true
 
-        emit(true)
-
-        for (second in 0 until Int.MAX_VALUE) {
+        for (second in 0..Int.MAX_VALUE) {
             delay(1000)
 
-            val isConnected = when {
-                second % 15 == 0 -> true
-                second % 5 == 0 -> true
-                second % 3 == 0 -> false
-                else -> true
+            val shouldBeConnected = second % 5 == 0 || second % 3 != 0
+
+            if (isConnected != shouldBeConnected) {
+                lastDisconnectTime = if (shouldBeConnected) null else System.currentTimeMillis()
+                isConnected = shouldBeConnected
+            } else if (!shouldBeConnected) {
+                lastDisconnectTime?.let {
+                    if (System.currentTimeMillis() - it >= 3500) {
+                        isConnected = false
+                    }
+                }
             }
 
-            val currentTime = System.currentTimeMillis()
-            if (isConnected) {
-                disconnectStartTime = null
-                emit(true)
-            } else if (disconnectStartTime == null) {
-                disconnectStartTime = currentTime
-            } else if (currentTime - disconnectStartTime >= 3500) {
-                emit(false)
-            }
+            emit(isConnected)
         }
     }
 }
