@@ -1,5 +1,5 @@
 # Carv Android Challenge
- A Android Coding Challenge provided by Carly
+ A Android Coding Challenge provided by Carv
 
 
 ## Problem 1: Dynamic Circle Visualization
